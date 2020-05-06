@@ -118,9 +118,13 @@ namespace AudioPlayer.Droid.Services
         {
             if( volume <= _maxVolume)
                 _audioManager.SetStreamVolume(Stream.Music, volume, 0);
-                
+
+            //_audioManager.GetStreamVolume(Stream.Music);
+
             //_mediaPlayer.SetVolume(leftVolume, rightVolume);
         }
+
+
 
         public int GetMaxVolume()
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -25,21 +26,24 @@ namespace AudioPlayer
         private bool _repeat = false;
         private bool _rand = false;
 
-        private string _sourcePlay;
-        private string _sourcePause;
+        private readonly string _sourcePlay;
+        private readonly string _sourcePause;
 
-        private string _sourceRepeat;
-        private string _sourceNRepeat;
+        private readonly string _sourceRepeat;
+        private readonly string _sourceNRepeat;
 
-        private string _sourceRand;
-        private string _sourceNRand;
+        private readonly string _sourceRand;
+        private readonly string _sourceNRand;
 
-        private AudioPlayerViewModel _player;
+        private readonly AudioPlayerViewModel _player;
 
         
         public MainPage()
         {   
             InitializeComponent();
+
+            MyList = (List<string>)DependencyService.Get<IMyFile>().GetFileLocation();
+            MySongs = new List<Song>();
 
             _sourcePlay = "play.png";
             _sourcePause = "pause.png";
@@ -50,26 +54,31 @@ namespace AudioPlayer
             _sourceRepeat = "repeat.png";
             _sourceNRepeat = "n_repeat.png";
 
-
-            MyList = (List<string>)DependencyService.Get<IMyFile>().GetFileLocation();
-            MySongs = new List<Song>();
-
             _player = new AudioPlayerViewModel(DependencyService.Get<IAudio>());
-
             _player.SetLooping(_repeat);
 
             MaxVolume = _player.GetMaxVolume();
             Volume.Value = _player.GetVolume();
 
-            foreach(var el in MyList)
+            AddSongsInMyListAsync();
+
+            BindingContext = this;
+        }
+
+        private async void AddSongsInMyListAsync()
+        {
+            await Task.Run(() =>
             {
-                _player.SetDataSource(el);
-                _player.UpdateInfo();
+                foreach (var el in MyList)
+                {
+                    _player.SetDataSource(el);
+                    _player.UpdateInfo();
 
-                MySongs.Add(new Song(_player.GetNameSong(), _player.GetArtist(), _player.GetDuration(), el));
-            }
+                    MySongs.Add(new Song(_player.GetNameSong(), _player.GetArtist(), _player.GetDuration(), el));
 
-            this.BindingContext = this;
+                    //MySongs.Add(new Song("name", "artist", "14.5", el));
+                }
+            });
         }
 
         private void Slider_OnValueChanged(object sender, ValueChangedEventArgs e)
